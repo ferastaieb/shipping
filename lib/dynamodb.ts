@@ -1,6 +1,7 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   BatchWriteCommand,
+  BatchWriteCommandInput,
   DeleteCommand,
   DynamoDBDocumentClient,
   GetCommand,
@@ -230,12 +231,14 @@ export async function queryAll<T>(params: QueryCommandInput) {
   return items;
 }
 
-export async function batchWriteAll(requests: Record<string, { DeleteRequest?: { Key: Record<string, unknown> } }[]>) {
-  let unprocessed = requests;
+export async function batchWriteAll(requests: NonNullable<BatchWriteCommandInput["RequestItems"]>) {
+  let unprocessed: NonNullable<BatchWriteCommandInput["RequestItems"]> = requests;
 
   while (Object.keys(unprocessed).length) {
     const result = await ddb.send(new BatchWriteCommand({ RequestItems: unprocessed }));
-    unprocessed = result.UnprocessedItems || {};
+    unprocessed = (result.UnprocessedItems || {}) as NonNullable<
+      BatchWriteCommandInput["RequestItems"]
+    >;
     if (Object.keys(unprocessed).length) {
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
