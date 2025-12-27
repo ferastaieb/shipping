@@ -151,6 +151,12 @@ export default function LoginPage() {
                 Register here
               </Link>
             </div>
+            <div className="text-xs text-center text-gray-500">
+              Need to import a SQL backup?{" "}
+              <Link href="/login/import" className="text-primary hover:underline">
+                Import here
+              </Link>
+            </div>
           </CardFooter>
         </form>
       </Card>
