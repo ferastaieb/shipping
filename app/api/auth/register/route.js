@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { createUser, getUserByUsername } from '@/lib/db'
 
+const SECRET_REG_KEY = "Zaxon_Secret"
+
 export async function POST(request) {
   try {
     const { username, password, registrationKey } = await request.json()
     // 1. Check secret registration key
-    if (registrationKey !== process.env.SECRET_REG_KEY) {
+    if (registrationKey !== SECRET_REG_KEY) {
       return NextResponse.json({ error: 'Invalid registration key' }, { status: 401 })
     }
 

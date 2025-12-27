@@ -3,14 +3,15 @@ import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 
+const JWT_SECRET = "Zaxon_Secret_JWT";
+
 export function getTokenFromRequest(request: NextRequest): string | null {
   return request.cookies.get("token")?.value || null;
 }
 
 export function verifyToken(token: string) {
   try {
-    // Note: process.env.JWT_SECRET should be defined and is available only on the server.
-    return jwt.verify(token, process.env.JWT_SECRET as string);
+    return jwt.verify(token, JWT_SECRET);
   } catch (error) {
     console.error("Invalid token:", error);
     return null;

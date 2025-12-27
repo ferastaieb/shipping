@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { getUserByUsername } from '@/lib/db'
 
+const JWT_SECRET = "Zaxon_Secret_JWT"
+
 export async function POST(request) {
   try {
     const { username, password } = await request.json()
@@ -23,7 +25,7 @@ export async function POST(request) {
     }
 
     // 3. Generate JWT
-    const token = jwt.sign({ userId: user.id, username: user.username }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, {
       expiresIn: '7d', // example: token is valid for 7 days
     })
 

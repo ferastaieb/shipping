@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';       // Next.js helper to read request cookies
 
+const JWT_SECRET = "Zaxon_Secret_JWT";
+
 // 1) Ensure a single global instance in development
 declare global {
   // eslint-disable-next-line no-var
@@ -24,7 +26,7 @@ prisma.$use(async (params, next) => {
     const token = (await cookies()).get('token')?.value;
     if (token) {
       try {
-        const { userId } = jwt.verify(token, process.env.JWT_SECRET!) as any;
+        const { userId } = jwt.verify(token, JWT_SECRET) as any;
         params.args.data = {
           ...params.args.data,
           ...(params.action==='create' && { createdByUserId: userId }),
