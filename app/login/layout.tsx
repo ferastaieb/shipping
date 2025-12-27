@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 export default function LoginLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode //test
 }) {
   return (
     <>
