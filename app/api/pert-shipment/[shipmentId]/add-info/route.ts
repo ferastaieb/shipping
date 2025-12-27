@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import {
   createNote,
-  getItemsByPartialShipmentId,
   getPackagesByPartialShipmentId,
   getPartialShipmentById,
   getPartialShipmentWithDetails,
