@@ -45,15 +45,16 @@ const TABLE_ENV_KEYS = {
 } as const;
 
 const TABLES: Record<keyof typeof TABLE_ENV_KEYS, string> = {
-  shipments: process.env.DDB_SHIPMENTS_TABLE || "",
-  partialShipments: process.env.DDB_PARTIAL_SHIPMENTS_TABLE || "",
-  packageDetails: process.env.DDB_PACKAGE_DETAILS_TABLE || "",
-  partialShipmentItems: process.env.DDB_PARTIAL_SHIPMENT_ITEMS_TABLE || "",
-  customers: process.env.DDB_CUSTOMERS_TABLE || "",
-  users: process.env.DDB_USERS_TABLE || "",
-  notes: process.env.DDB_NOTES_TABLE || "",
-  auditLogs: process.env.DDB_AUDIT_LOGS_TABLE || "",
-  counters: process.env.DDB_COUNTERS_TABLE || "",
+  shipments: process.env.DDB_SHIPMENTS_TABLE || "CdkStack-shipments",
+  partialShipments: process.env.DDB_PARTIAL_SHIPMENTS_TABLE || "CdkStack-partial-shipments",
+  packageDetails: process.env.DDB_PACKAGE_DETAILS_TABLE || "CdkStack-package-details",
+  partialShipmentItems:
+    process.env.DDB_PARTIAL_SHIPMENT_ITEMS_TABLE || "CdkStack-partial-shipment-items",
+  customers: process.env.DDB_CUSTOMERS_TABLE || "CdkStack-customers",
+  users: process.env.DDB_USERS_TABLE || "CdkStack-users",
+  notes: process.env.DDB_NOTES_TABLE || "CdkStack-notes",
+  auditLogs: process.env.DDB_AUDIT_LOGS_TABLE || "CdkStack-audit-logs",
+  counters: process.env.DDB_COUNTERS_TABLE || "CdkStack-counters",
 };
 
 export function tableName(key: keyof typeof TABLES) {
