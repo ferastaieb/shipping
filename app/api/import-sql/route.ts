@@ -30,6 +30,30 @@ const TABLE_KEY_BY_SQL: Record<string, TableKey> = {
 const BOOLEAN_COLUMNS = new Set(["isOpen", "paymentCompleted"]);
 const JSON_COLUMNS = new Set(["images"]);
 
+function extractCreateTableSchemas(sql: string) {
+  const schemas: Record<string, string[]> = {};
+  const regex = /CREATE TABLE\s+`?([A-Za-z0-9_]+)`?\s*\(([\s\S]*?)\)\s*ENGINE=/gi;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(sql)) !== null) {
+    const tableNameRaw = match[1];
+    const body = match[2];
+    const columns: string[] = [];
+    const lines = body.split(/\r?\n/);
+    for (const line of lines) {
+      const colMatch = line.trim().match(/^`([^`]+)`\s+/);
+      if (colMatch) {
+        columns.push(colMatch[1]);
+      }
+    }
+    if (columns.length) {
+      schemas[tableNameRaw.toLowerCase()] = columns;
+    }
+  }
+
+  return schemas;
+}
+
 function extractInsertStatements(sql: string) {
   const statements: string[] = [];
   const lower = sql.toLowerCase();
@@ -298,6 +322,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "SQL file is empty." }, { status: 400 });
     }
 
+    const schemaMap = extractCreateTableSchemas(sql);
     const statements = extractInsertStatements(sql);
     if (!statements.length) {
       return NextResponse.json({ error: "No INSERT statements found." }, { status: 400 });
@@ -337,7 +362,9 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const columns = parsed.columns;
+      const columns = parsed.columns && parsed.columns.length
+        ? parsed.columns
+        : schemaMap[normalizedName];
       if (!columns || !columns.length) {
         return NextResponse.json(
           { error: `Missing columns for table ${parsed.tableNameRaw}.` },
