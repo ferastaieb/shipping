@@ -283,59 +283,76 @@ export default function DashboardStats() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-white shadow-md border-l-4 border-blue-500">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <Card className="bg-white shadow-md border-l-4 border-blue-500 transition-shadow hover:shadow-lg">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center">
-              <Package className="mr-2 h-5 w-5 text-blue-500" />
+            <CardTitle className="text-sm font-semibold text-gray-600 flex items-center">
+              <Package className="mr-2 h-4 w-4 text-blue-500" />
               Total Shipments
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{totalShipments}</div>
-            <p className="text-sm text-muted-foreground mt-1">
+          <CardContent className="space-y-1">
+            <div className="text-2xl xl:text-3xl font-semibold tracking-tight text-gray-900 tabular-nums">
+              {totalShipments}
+            </div>
+            <p className="text-xs text-muted-foreground">
               {openShipments} open, {closedShipments} closed
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-md border-l-4 border-green-500">
+        <Card className="bg-white shadow-md border-l-4 border-green-500 transition-shadow hover:shadow-lg">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center">
-              <TrendingUp className="mr-2 h-5 w-5 text-green-500" />
+            <CardTitle className="text-sm font-semibold text-gray-600 flex items-center">
+              <TrendingUp className="mr-2 h-4 w-4 text-green-500" />
               Total Weight
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{totalWeight.toFixed(2)} kg</div>
-            <p className="text-sm text-muted-foreground mt-1">Across all shipments</p>
+          <CardContent className="space-y-1">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl xl:text-3xl font-semibold tracking-tight text-gray-900 tabular-nums">
+                {totalWeight.toFixed(2)}
+              </span>
+              <span className="text-xs text-muted-foreground">kg</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Across all shipments</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-md border-l-4 border-purple-500">
+        <Card className="bg-white shadow-md border-l-4 border-purple-500 transition-shadow hover:shadow-lg">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center">
-              <Truck className="mr-2 h-5 w-5 text-purple-500" />
+            <CardTitle className="text-sm font-semibold text-gray-600 flex items-center">
+              <Truck className="mr-2 h-4 w-4 text-purple-500" />
               Total Volume
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{totalVolume.toFixed(2)} m³</div>
-            <p className="text-sm text-muted-foreground mt-1">Across all shipments</p>
+          <CardContent className="space-y-1">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl xl:text-3xl font-semibold tracking-tight text-gray-900 tabular-nums">
+                {totalVolume.toFixed(2)}
+              </span>
+              <span className="text-xs text-muted-foreground">m³</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Across all shipments</p>
           </CardContent>
         </Card>
 
         {financialStats && (
-          <Card className="bg-white shadow-md border-l-4 border-amber-500">
+          <Card className="bg-white shadow-md border-l-4 border-amber-500 transition-shadow hover:shadow-lg">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <DollarSign className="mr-2 h-5 w-5 text-amber-500" />
+              <CardTitle className="text-sm font-semibold text-gray-600 flex items-center">
+                <DollarSign className="mr-2 h-4 w-4 text-amber-500" />
                 Total Revenue
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{financialStats.totalCost.toFixed(2)} AED</div>
-              <p className="text-sm text-muted-foreground mt-1">
+            <CardContent className="space-y-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl xl:text-3xl font-semibold tracking-tight text-gray-900 tabular-nums">
+                  {financialStats.totalCost.toFixed(2)}
+                </span>
+                <span className="text-xs text-muted-foreground">AED</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
                 {financialStats.totalAmountPaid.toFixed(2)} AED collected
               </p>
             </CardContent>
@@ -344,12 +361,22 @@ export default function DashboardStats() {
       </div>
 
       <Tabs defaultValue="status" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="status">By Status</TabsTrigger>
-          <TabsTrigger value="destination">By Destination</TabsTrigger>
-          <TabsTrigger value="partialShipments">Partial Shipments</TabsTrigger>
-          <TabsTrigger value="financial">Financial</TabsTrigger>
-          <TabsTrigger value="customers">Customers</TabsTrigger>
+        <TabsList className="mb-4 flex w-full flex-wrap justify-start gap-2 bg-muted/70 p-1 h-auto">
+          <TabsTrigger value="status" className="flex-1 sm:flex-none">
+            By Status
+          </TabsTrigger>
+          <TabsTrigger value="destination" className="flex-1 sm:flex-none">
+            By Destination
+          </TabsTrigger>
+          <TabsTrigger value="partialShipments" className="flex-1 sm:flex-none">
+            Partial Shipments
+          </TabsTrigger>
+          <TabsTrigger value="financial" className="flex-1 sm:flex-none">
+            Financial
+          </TabsTrigger>
+          <TabsTrigger value="customers" className="flex-1 sm:flex-none">
+            Customers
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="status" className="space-y-4">

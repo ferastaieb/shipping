@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Loader2, Clock, Package, User } from 'lucide-react'
+import { Loader2, Clock, Package, User } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type OpenShipment = {
@@ -178,14 +179,14 @@ export default function OpenShipmentsWithActivities() {
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="shipments" onValueChange={handleTabChange}>
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="shipments" onValueChange={handleTabChange} className="flex flex-col">
+        <TabsList className="grid w-full grid-cols-2 rounded-lg bg-gray-100 p-1">
           <TabsTrigger value="shipments">Open Shipments</TabsTrigger>
           <TabsTrigger value="activities">User Activities</TabsTrigger>
         </TabsList>
 
         {/* Shipments Tab */}
-        <TabsContent value="shipments" className="mt-4">
+        <TabsContent value="shipments" className="mt-4 flex-1">
           {isLoadingShipments ? (
             <div className="flex justify-center items-center h-40">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -195,22 +196,22 @@ export default function OpenShipmentsWithActivities() {
           ) : shipments.length === 0 ? (
             <div className="text-center p-4">No open shipments found.</div>
           ) : (
-            <div className="max-h-[400px] overflow-y-auto pr-1">
+            <div className="max-h-[420px] overflow-y-auto pr-2">
               <div className="space-y-3">
                 {shipments.map((shipment) => (
                   <Link
                     href={`/shipments/${shipment.id}`}
                     key={shipment.id}
-                    className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="block rounded-xl border border-gray-200/70 bg-white p-3 shadow-sm transition hover:border-gray-200 hover:shadow-md"
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-medium">Batch #{shipment.id}</p>
+                        <p className="font-medium text-gray-900">Batch #{shipment.id}</p>
                         <p className="text-sm text-gray-500">To {shipment.destination}</p>
                       </div>
-                      <div className="text-right text-sm">
-                        <p>{new Date(shipment.dateCreated).toLocaleDateString()}</p>
-                        <p className="text-gray-500">{shipment.totalWeight.toFixed(2)} kg</p>
+                      <div className="text-right text-xs text-gray-500">
+                        <p className="tabular-nums">{new Date(shipment.dateCreated).toLocaleDateString()}</p>
+                        <p className="tabular-nums">{shipment.totalWeight.toFixed(2)} kg</p>
                       </div>
                     </div>
                   </Link>
@@ -227,7 +228,7 @@ export default function OpenShipmentsWithActivities() {
         </TabsContent>
 
         {/* Replace the Activities Tab content with this updated version */}
-        <TabsContent value="activities" className="mt-4">
+        <TabsContent value="activities" className="mt-4 flex-1">
           {isLoadingActivities ? (
             <div className="flex justify-center items-center h-40">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -237,12 +238,10 @@ export default function OpenShipmentsWithActivities() {
           ) : (
             <>
               <div className="mb-4">
-                <input
-                  type="text"
+                <Input
                   placeholder="Search activities..."
                   value={searchTerm}
                   onChange={handleSearch}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
               
@@ -251,12 +250,12 @@ export default function OpenShipmentsWithActivities() {
                   {activities.length === 0 ? "No activities found." : "No matching activities found."}
                 </div>
               ) : (
-                <div className="max-h-[400px] overflow-y-auto pr-1">
+                <div className="max-h-[420px] overflow-y-auto pr-2">
                   <div className="space-y-3">
                     {filteredActivities.map((activity, index) => (
                       <div
                         key={`${activity.model}-${activity.recordId}-${activity.action}-${index}`}
-                        className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="rounded-xl border border-gray-200/70 bg-white p-3 shadow-sm transition hover:border-gray-200 hover:shadow-md"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex items-start space-x-3">
