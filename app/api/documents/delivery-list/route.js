@@ -1,26 +1,23 @@
 // app/api/documents/delivery-list/route.js
-import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import { NextResponse } from "next/server";
+import { getPartialShipmentsByShipmentId, getShipmentById } from "@/lib/db";
 
 export async function POST(request) {
   try {
-    const { shipmentId } = await request.json()
+    const { shipmentId } = await request.json();
 
-    const shipment = await prisma.shipment.findUnique({
-      where: { id: Number(shipmentId) },
-      include: { partialShipments: true },
-    })
+    const shipment = await getShipmentById(Number(shipmentId));
     if (!shipment) {
-      return NextResponse.json({ error: 'Shipment not found' }, { status: 404 })
+      return NextResponse.json({ error: "Shipment not found" }, { status: 404 });
     }
 
-    // TODO: Generate a PDF listing all partialShipments and their receivers
-    // Example, we just return a JSON
+    const partialShipments = await getPartialShipmentsByShipmentId(Number(shipmentId));
+
     return NextResponse.json({
-      message: 'Delivery list generated',
-      shipment,
-    })
+      message: "Delivery list generated",
+      shipment: { ...shipment, partialShipments },
+    });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

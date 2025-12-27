@@ -1,37 +1,51 @@
 // app/api/documents/invoice/route.js
-import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import { NextResponse } from "next/server";
+import {
+  getPartialShipmentWithDetails,
+  getPartialShipmentsByShipmentId,
+  hydratePartialShipment,
+} from "@/lib/db";
 
 export async function POST(request) {
   try {
-    const body = await request.json()
-    const { partialShipmentIds, customerId, shipmentId } = body
+    const body = await request.json();
+    const { partialShipmentIds, customerId, shipmentId } = body;
 
-    // Query the data you need to build your invoice
-    // Example: fetch partial shipments by IDs or by customer & shipment
-    let partials = []
+    let partials = [];
     if (partialShipmentIds) {
-      partials = await prisma.partialShipment.findMany({
-        where: { id: { in: partialShipmentIds } },
-        include: { customer: true, packages: true },
-      })
+      partials = await Promise.all(
+        partialShipmentIds.map((id) =>
+          getPartialShipmentWithDetails(Number(id), {
+            includeCustomer: true,
+            includePackages: true,
+            includeItems: false,
+            includeNote: true,
+            includeShipment: false,
+          })
+        )
+      );
+      partials = partials.filter(Boolean);
     } else if (customerId && shipmentId) {
-      partials = await prisma.partialShipment.findMany({
-        where: {
-          customerId: customerId,
-          shipmentId: shipmentId,
-        },
-        include: { customer: true, shipment: true },
-      })
+      const byShipment = await getPartialShipmentsByShipmentId(Number(shipmentId));
+      const filtered = byShipment.filter((ps) => ps.customerId === Number(customerId));
+      partials = await Promise.all(
+        filtered.map((ps) =>
+          hydratePartialShipment(ps, {
+            includeCustomer: true,
+            includeShipment: true,
+            includePackages: false,
+            includeItems: false,
+            includeNote: false,
+          })
+        )
+      );
     }
 
-    // TODO: Generate PDF or invoice data from partials
-    // For now, we just return a JSON mock
     return NextResponse.json({
-      message: 'Invoice generated',
+      message: "Invoice generated",
       partials,
-    })
+    });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

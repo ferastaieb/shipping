@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# aws cdk (local infra project + synth output)
+/cdk/
+/cdk.out/
+cdk/.cdk.staging/
+
+# local dev database
+/prisma/dev.db

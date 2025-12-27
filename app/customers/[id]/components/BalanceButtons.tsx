@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
+import { PlusCircle, MinusCircle } from "lucide-react"
 
 interface Customer {
   id: number
@@ -12,6 +13,7 @@ interface Customer {
   address: string
   balance: number
 }
+
 export function BalanceButtons({ customer }: { customer: Customer }) {
   const router = useRouter()
   const [isProcessing, setIsProcessing] = useState(false)
@@ -19,7 +21,7 @@ export function BalanceButtons({ customer }: { customer: Customer }) {
   const handleAddBalance = async () => {
     const amountStr = prompt("Enter amount to add to balance:")
     if (!amountStr) return
-    const amount = parseFloat(amountStr)
+    const amount = Number.parseFloat(amountStr)
     if (isNaN(amount)) {
       toast({
         title: "Error",
@@ -30,13 +32,15 @@ export function BalanceButtons({ customer }: { customer: Customer }) {
     }
     setIsProcessing(true)
     try {
+      // Create a FormData instance and append balanceIncrement
+      const formData = new FormData()
+      formData.append("balanceIncrement", amount.toString())
+      // Call the new API without setting Content-Type header manually
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/customers/${customer.id}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          // Assuming your backend accepts a field like `balanceIncrement`
-          body: JSON.stringify({ balanceIncrement: amount }),
+          body: formData,
         }
       )
       if (!res.ok) throw new Error("Failed to add balance")
@@ -46,14 +50,13 @@ export function BalanceButtons({ customer }: { customer: Customer }) {
       })
       router.refresh()
     } catch (error: unknown) {
-      // Type guard: check if error is an instance of Error
-      const errorMessage = error instanceof Error ? error.message : "Failed to add balance";
-    
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to add balance"
       toast({
         title: "Error",
         description: errorMessage,
         variant: "destructive",
-      });
+      })
     } finally {
       setIsProcessing(false)
     }
@@ -62,7 +65,7 @@ export function BalanceButtons({ customer }: { customer: Customer }) {
   const handleRemoveBalance = async () => {
     const amountStr = prompt("Enter amount to remove from balance:")
     if (!amountStr) return
-    const amount = parseFloat(amountStr)
+    const amount = Number.parseFloat(amountStr)
     if (isNaN(amount)) {
       toast({
         title: "Error",
@@ -73,13 +76,13 @@ export function BalanceButtons({ customer }: { customer: Customer }) {
     }
     setIsProcessing(true)
     try {
+      const formData = new FormData()
+      formData.append("balanceIncrement", (-amount).toString())
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/customers/${customer.id}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          // Send a negative increment to reduce balance.
-          body: JSON.stringify({ balanceIncrement: -amount }),
+          body: formData,
         }
       )
       if (!res.ok) throw new Error("Failed to remove balance")
@@ -89,14 +92,13 @@ export function BalanceButtons({ customer }: { customer: Customer }) {
       })
       router.refresh()
     } catch (error: unknown) {
-      // Type guard: check if error is an instance of Error
-      const errorMessage = error instanceof Error ? error.message : "Failed to remove balance";
-    
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to remove balance"
       toast({
         title: "Error",
         description: errorMessage,
         variant: "destructive",
-      });
+      })
     } finally {
       setIsProcessing(false)
     }
@@ -104,10 +106,22 @@ export function BalanceButtons({ customer }: { customer: Customer }) {
 
   return (
     <div className="flex space-x-2">
-      <Button variant="outline" onClick={handleAddBalance} disabled={isProcessing}>
+      <Button
+        variant="outline"
+        onClick={handleAddBalance}
+        disabled={isProcessing}
+        className="bg-[#27AE60] text-white hover:bg-[#2ECC71]"
+      >
+        <PlusCircle className="w-4 h-4 mr-2" />
         Add Balance
       </Button>
-      <Button variant="outline" onClick={handleRemoveBalance} disabled={isProcessing}>
+      <Button
+        variant="outline"
+        onClick={handleRemoveBalance}
+        disabled={isProcessing}
+        className="bg-[#E74C3C] text-white hover:bg-[#C0392B]"
+      >
+        <MinusCircle className="w-4 h-4 mr-2" />
         Remove Balance
       </Button>
     </div>

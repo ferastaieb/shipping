@@ -1,25 +1,23 @@
 // app/api/documents/customs/route.js
-import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import { NextResponse } from "next/server";
+import { getPartialShipmentsByShipmentId, getShipmentById } from "@/lib/db";
 
 export async function POST(request) {
   try {
-    const { shipmentId } = await request.json()
+    const { shipmentId } = await request.json();
 
-    const shipment = await prisma.shipment.findUnique({
-      where: { id: Number(shipmentId) },
-      include: { partialShipments: true },
-    })
+    const shipment = await getShipmentById(Number(shipmentId));
     if (!shipment || shipment.isOpen) {
-      return NextResponse.json({ error: 'Shipment not found or not closed' }, { status: 400 })
+      return NextResponse.json({ error: "Shipment not found or not closed" }, { status: 400 });
     }
 
-    // TODO: Create a customs document PDF summarizing total weight, volume, etc.
+    const partialShipments = await getPartialShipmentsByShipmentId(Number(shipmentId));
+
     return NextResponse.json({
-      message: 'Customs document generated',
-      shipment,
-    })
+      message: "Customs document generated",
+      shipment: { ...shipment, partialShipments },
+    });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

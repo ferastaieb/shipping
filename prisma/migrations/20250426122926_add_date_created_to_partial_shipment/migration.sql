@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `PartialShipment` ADD COLUMN `dateCreated` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3);

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table"
 import { Loader2 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Define a type for a Shipment (you can extend this as needed)
 interface Shipment {
@@ -69,11 +70,12 @@ export default function ClosedShipmentsPage() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Closed Shipments</h1>
 
       {shipments.length === 0 ? (
-        <p>No closed shipments found.</p>
+        <p>No closed Batches found.</p>
       ) : (
         <Card>
           <CardHeader>
@@ -126,5 +128,6 @@ export default function ClosedShipmentsPage() {
         </Card>
       )}
     </div>
+    </ProtectedRoute>
   );
 }

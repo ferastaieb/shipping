@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -16,23 +16,54 @@ model Shipment {
   totalVolume   Float             @default(0.0)
   driverName    String?
   driverVehicle String?
-  note          String?
   dateClosed    DateTime?
 
+  createdByUser   User? @relation("ShipmentsCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)  
+  createdByUserId Int?  
+  updatedByUser   User? @relation("ShipmentsUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: SetNull)  
+  updatedByUserId Int? 
+
   partialShipments PartialShipment[]
+
+  // One-to-one Note relation
+  noteId Int?    @unique
+  note   Note?   @relation("ShipmentNote", fields: [noteId], references: [id])
 }
 
-model PartialShipmentItem {
-  id                Int              @id @default(autoincrement())
-  weight            Float
-  origin            String
-  hscode            String
-  amount            Float
-  value             Float
+model PartialShipment {
+  id                    Int                    @id @default(autoincrement())
+  receiverName          String?
+  receiverPhone         String?
+  receiverAddress       String?
+  volume                Float                  @default(0.0)
+  cost                  Float                  @default(0.0)
+  amountPaid            Float                  @default(0.0)
+  discountAmount        Float                  @default(0.0) // New field for discount amount
+  paymentStatus         String?                // e.g. "paid", "unpaid", "partially_paid"
+  paymentResponsibility String?                // e.g. "customer" or "receiver"
+  paymentCompleted      Boolean                @default(false)
+  extraCostReason       String?   // (text) describes the additional cost reason
+  extraCostAmount       Float?    // (number) the additional cost amount
+  dateCreated           DateTime?              @default(now())
 
-  // Relation field: each item belongs to a PartialShipment.
-  partialShipmentId Int
-  partialShipment   PartialShipment  @relation(fields: [partialShipmentId], references: [id])
+  // ── Audit fields ─────────────────────────────────────────────────────────────────
+  createdByUser   User? @relation("PartialShipmentsCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)  
+  createdByUserId Int?  
+  updatedByUser   User? @relation("PartialShipmentsUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: SetNull)  
+  updatedByUserId Int?  
+  
+  shipmentId            Int
+  shipment              Shipment               @relation(fields: [shipmentId], references: [id])
+  
+  customerId            Int
+  customer              Customer               @relation(fields: [customerId], references: [id])
+  
+  packages              PackageDetail[]
+  items                 PartialShipmentItem[]
+
+  // One-to-one Note relation
+  noteId Int?  @unique
+  note   Note? @relation("PartialShipmentNote", fields: [noteId], references: [id])
 }
 
 model PackageDetail {
@@ -41,38 +72,51 @@ model PackageDetail {
   width             Float
   height            Float
   weight            Float
+  units             Int              @default(1) // new field: number of units, default is one
+  typeOfPackage     String?          // New field added
+  description       String?
+  costType          String?          // New field: CPM or KG
+  totalCost         Float?            // New field
+
+  // ── Audit fields ─────────────────────────────────────────────────────────────────
+  createdByUser   User? @relation("PackageDetailsCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)  
+  createdByUserId Int?  
+  updatedByUser   User? @relation("PackageDetailsUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: SetNull)  
+  updatedByUserId Int?  
 
   partialShipmentId Int
   partialShipment   PartialShipment  @relation(fields: [partialShipmentId], references: [id])
+
+  // One-to-one Note relation
+  noteId Int?  @unique
+  note   Note? @relation("PackageDetailNote", fields: [noteId], references: [id])
 }
 
-model PartialShipment {
-  id                    Int                    @id @default(autoincrement())
-  receiverName          String?
-  receiverPhone         String?
-  receiverAddress       String?
-  // (The following fields will be replaced by package details on the front end)
-  // length              Float    @default(0.0)
-  // width               Float    @default(0.0)
-  // height              Float    @default(0.0)
-  // weight              Float    @default(0.0)
-  volume                Float                  @default(0.0)
-  cost                  Float                  @default(0.0)
-  amountPaid            Float                  @default(0.0)
-  paymentStatus         String?                // e.g. "paid", "unpaid", "partially_paid"
-  paymentResponsibility String?                // e.g. "customer" or "receiver"
-  paymentCompleted      Boolean                @default(false) // <<== New field
+model PartialShipmentItem {
+  id          Int     @id @default(autoincrement())
+  weight      Float
+  origin      String
+  hscode      String
+  value       Float
 
-  shipmentId            Int
-  shipment              Shipment               @relation(fields: [shipmentId], references: [id])
-  
-  customerId            Int
-  customer              Customer               @relation(fields: [customerId], references: [id])
-  
-  // New relation: one Partial Shipment has one or more Package Details.
-  packages              PackageDetail[]
-  items                 PartialShipmentItem[]
+  // ── Audit fields ─────────────────────────────────────────────────────────────────
+  createdByUser   User? @relation("PartialShipmentItemsCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)  
+  createdByUserId Int?  
+  updatedByUser   User? @relation("PartialShipmentItemsUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: SetNull)  
+  updatedByUserId Int?  
 
+  // New fields matching your UI:
+  unit        String?   // e.g. "kg", "lb"
+  quantity    Float?    // quantity of the item
+  description String?   // optional item description
+  priceByUnit Float?    // price per unit
+
+  partialShipmentId Int
+  partialShipment   PartialShipment  @relation(fields: [partialShipmentId], references: [id])
+
+  // One-to-one Note relation
+  noteId Int?  @unique
+  note   Note? @relation("PartialShipmentItemNote", fields: [noteId], references: [id])
 }
 
 model Customer {
@@ -81,7 +125,72 @@ model Customer {
   phone   String?
   address String?
   balance Float            @default(0.0)
+  origin  String?          // new field: describes customer's origin or base location
+
+  // ── Audit fields ─────────────────────────────────────────────────────────────────
+  createdByUser   User? @relation("CustomersCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)  
+  createdByUserId Int?  
+  updatedByUser   User? @relation("CustomersUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: SetNull)  
+  updatedByUserId Int?  
 
   partialShipments PartialShipment[]
+
+  // One-to-one Note relation
+  noteId Int?  @unique
+  note   Note? @relation("CustomerNote", fields: [noteId], references: [id])
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── Back‑relations for audit fields ─────────────────────────────────────────────
+  createdNotes               Note[]               @relation("NotesCreatedByUser")
+  updatedNotes               Note[]               @relation("NotesUpdatedByUser")
+  shipmentsCreated           Shipment[]           @relation("ShipmentsCreatedByUser")
+  shipmentsUpdated           Shipment[]           @relation("ShipmentsUpdatedByUser")
+  partialsCreated            PartialShipment[]    @relation("PartialShipmentsCreatedByUser")
+  partialsUpdated            PartialShipment[]    @relation("PartialShipmentsUpdatedByUser")
+  packagesCreated            PackageDetail[]      @relation("PackageDetailsCreatedByUser")
+  packagesUpdated            PackageDetail[]      @relation("PackageDetailsUpdatedByUser")
+  itemsCreated               PartialShipmentItem[] @relation("PartialShipmentItemsCreatedByUser")
+  itemsUpdated               PartialShipmentItem[] @relation("PartialShipmentItemsUpdatedByUser")
+  customersCreated           Customer[]           @relation("CustomersCreatedByUser")
+  customersUpdated           Customer[]           @relation("CustomersUpdatedByUser")
+  auditLogs                  AuditLog[]           @relation("UserToAuditLogs")
+}
+
+model Note {
+  id      Int      @id @default(autoincrement())
+  content String?
+
+  images  Json?
+
+  createdByUserId      Int?
+  createdByUser        User?    @relation("NotesCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  updatedByUserId      Int?
+  updatedByUser        User?    @relation("NotesUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+
+  shipment             Shipment?            @relation("ShipmentNote")
+  partialShipment      PartialShipment?     @relation("PartialShipmentNote")
+  packageDetail        PackageDetail?       @relation("PackageDetailNote")
+  partialShipmentItem  PartialShipmentItem? @relation("PartialShipmentItemNote")
+  customer             Customer?            @relation("CustomerNote")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  model      String   // e.g. "PartialShipment", "Customer"
+  action     String   // e.g. "create", "update", "delete"
+  recordId   Int      // the primary key of the record changed
+  userId     Int
+  user      User     @relation("UserToAuditLogs", fields: [userId], references: [id])
+  timestamp  DateTime @default(now())
+
+  @@index([timestamp])      // to speed up sorting by newest
 }
 
