@@ -156,9 +156,12 @@ export async function GET() {
         }
         const current = packageTypes.get(type);
         const units = pkg.units || 1;
+        const length = pkg.length || 0;
+        const width = pkg.width || 0;
+        const height = pkg.height || 0;
         current.count += units;
         current.weight += (pkg.weight || 0) * units;
-        current.volume += (pkg.length * pkg.width * pkg.height) * units;
+        current.volume += length * width * height * units;
         packageTypes.set(type, current);
       });
     });

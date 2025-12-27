@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -112,11 +112,6 @@ export default function EditPartialShipmentPage() {
   const [existingNoteImages, setExistingNoteImages] = useState<string[]>([])
 
   useEffect(() => {
-    fetchCustomers()
-    fetchPartialShipment()
-  }, [id])
-
-  useEffect(() => {
     if (partialShipment) {
       // Populate form data
       setFormData({
@@ -180,7 +175,7 @@ export default function EditPartialShipmentPage() {
     }
   }, [partialShipment])
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/customers`)
       if (!response.ok) throw new Error("Failed to fetch customers")
@@ -194,9 +189,9 @@ export default function EditPartialShipmentPage() {
         variant: "destructive",
       })
     }
-  }
+  }, [toast])
 
-  const fetchPartialShipment = async () => {
+  const fetchPartialShipment = useCallback(async () => {
     try {
       setIsFetching(true)
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/partial-shipments/${id}`)
@@ -214,7 +209,12 @@ export default function EditPartialShipmentPage() {
     } finally {
       setIsFetching(false)
     }
-  }
+  }, [id, router, toast])
+
+  useEffect(() => {
+    fetchCustomers()
+    fetchPartialShipment()
+  }, [fetchCustomers, fetchPartialShipment])
 
   // Convert customers to options for react-select
   const customerOptions = customers.map((customer) => ({
@@ -812,6 +812,7 @@ export default function EditPartialShipmentPage() {
                   <div className="flex flex-wrap gap-2 mt-2">
                     {existingNoteImages.map((image, index) => (
                       <div key={index} className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={`${process.env.NEXT_PUBLIC_API_URL}${image.startsWith("/") ? "" : "/"}${image}`}
                           alt={`Note image ${index}`}

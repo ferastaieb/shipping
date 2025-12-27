@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Loader2, Package, Plus, Search, Truck } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
@@ -83,7 +83,7 @@ export default function PartialShipmentsPage() {
     process.env.NEXT_PUBLIC_IMAGE_BASE_URL || "https://147.93.58.160:10000/updown/fetch.cgi/var/www/shipping"
 
   // alongside fetchShipmentDetails(), define:
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/customers`)
       if (!res.ok) throw new Error("Failed to fetch customers")
@@ -91,11 +91,7 @@ export default function PartialShipmentsPage() {
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" })
     }
-  }
-  useEffect(() => {
-    fetchShipmentDetails()
-    fetchCustomers()
-  }, [id])
+  }, [toast])
 
   useEffect(() => {
     if (shipment) {
@@ -151,7 +147,7 @@ export default function PartialShipmentsPage() {
     }
   }, [searchTerm, shipment, showIncompleteOnly, activeTab])
 
-  const fetchShipmentDetails = async () => {
+  const fetchShipmentDetails = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await fetch(
@@ -170,7 +166,12 @@ export default function PartialShipmentsPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [id, toast])
+
+  useEffect(() => {
+    fetchShipmentDetails()
+    fetchCustomers()
+  }, [fetchShipmentDetails, fetchCustomers])
 
   const handleMarkPaymentDone = async (partialId: number) => {
     if (!shipment) return
