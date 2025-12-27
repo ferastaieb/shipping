@@ -92,7 +92,8 @@ function parseInsertStatement(statement: string) {
         .filter(Boolean)
     : null;
 
-  const valuesPart = statement.slice(match.index + match[0].length).trim().replace(/;$/, "");
+  const matchIndex = match.index ?? 0;
+  const valuesPart = statement.slice(matchIndex + match[0].length).trim().replace(/;$/, "");
 
   return {
     tableNameRaw,
