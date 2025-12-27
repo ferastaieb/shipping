@@ -21,7 +21,7 @@ export async function PATCH(
             return NextResponse.json({ error: "Partial shipment not found" }, { status: 404 })
         }
 
-        const userId = getUserIdFromCookies()
+        const userId = await getUserIdFromCookies()
         if (partialShipment.noteId) {
             await updateNote(partialShipment.noteId, { content: note }, userId)
         } else {

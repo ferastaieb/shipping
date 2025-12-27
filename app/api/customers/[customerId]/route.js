@@ -23,7 +23,7 @@ export async function PATCH(request, context) {
     }
 
     const formData = await request.formData();
-    const userId = getUserIdFromCookies();
+    const userId = await getUserIdFromCookies();
 
     const balanceIncrementStr = formData.get("balanceIncrement")?.toString();
     if (balanceIncrementStr) {

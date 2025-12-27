@@ -27,7 +27,7 @@ export async function PATCH(request, { params }) {
     const body = await request.json()
     // body could include: isOpen, driverName, driverVehicle, dateClosed, etc.
 
-    const userId = getUserIdFromCookies()
+    const userId = await getUserIdFromCookies()
     const updatedShipment = await updateItem(
       tableName('shipments'),
       { id: Number(shipmentId) },

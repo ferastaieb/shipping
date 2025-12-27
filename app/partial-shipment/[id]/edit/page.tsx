@@ -189,7 +189,7 @@ export default function EditPartialShipmentPage() {
         variant: "destructive",
       })
     }
-  }, [toast])
+  }, [])
 
   const fetchPartialShipment = useCallback(async () => {
     try {
@@ -209,7 +209,7 @@ export default function EditPartialShipmentPage() {
     } finally {
       setIsFetching(false)
     }
-  }, [id, router, toast])
+  }, [id, router])
 
   useEffect(() => {
     fetchCustomers()

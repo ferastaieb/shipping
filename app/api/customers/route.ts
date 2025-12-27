@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const userId = getUserIdFromCookies();
+    const userId = await getUserIdFromCookies();
 
     let note = null;
     let noteId;

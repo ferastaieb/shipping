@@ -92,7 +92,7 @@ export async function POST(
       return NextResponse.json({ error: "Customer not found." }, { status: 404 });
     }
 
-    const userId = getUserIdFromCookies();
+    const userId = await getUserIdFromCookies();
 
     let createdNoteId: number | undefined;
     let createdNote: any = null;

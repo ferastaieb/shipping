@@ -91,7 +91,7 @@ export default function PartialShipmentsPage() {
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" })
     }
-  }, [toast])
+  }, [])
 
   useEffect(() => {
     if (shipment) {
@@ -166,7 +166,7 @@ export default function PartialShipmentsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [id, toast])
+  }, [id])
 
   useEffect(() => {
     fetchShipmentDetails()

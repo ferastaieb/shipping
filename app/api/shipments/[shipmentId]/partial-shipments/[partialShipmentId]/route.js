@@ -68,7 +68,7 @@ export async function PATCH(request, { params }) {
       updateData.discountAmount = parseFloat(body.discountAmount);
     }
 
-    const userId = getUserIdFromCookies();
+    const userId = await getUserIdFromCookies();
     const updated = await updateItem(tableName("partialShipments"), { id: partialShipmentId }, {
       ...updateData,
       ...(userId ? { updatedByUserId: userId } : {}),

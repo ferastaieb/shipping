@@ -29,8 +29,8 @@ export async function requireAuth(request: NextRequest) {
   return decoded; // e.g., { userId, username, iat, exp }
 }
 
-export function getUserIdFromCookies(): number | null {
-  const token = cookies().get("token")?.value;
+export async function getUserIdFromCookies(): Promise<number | null> {
+  const token = (await cookies()).get("token")?.value;
   if (!token) {
     return null;
   }

@@ -91,7 +91,7 @@ export async function PUT(req, { params }) {
       await batchWriteAll(deleteRequests);
     }
 
-    const userId = getUserIdFromCookies();
+    const userId = await getUserIdFromCookies();
 
     for (const p of packages) {
       const base = {

@@ -80,7 +80,7 @@ export async function POST(request) {
     }
 
     // 4. Prepare nested note data if any note content or images are provided
-    const userId = getUserIdFromCookies()
+    const userId = await getUserIdFromCookies()
     let note = null
     let noteId
     if (noteContent || imagePaths.length > 0) {

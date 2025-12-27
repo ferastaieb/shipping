@@ -87,7 +87,7 @@ export async function POST(
     }, 0);
   }
 
-  const userId = getUserIdFromCookies();
+  const userId = await getUserIdFromCookies();
 
   let createdNoteId: number | undefined;
   if (noteContent.trim() || imagePaths.length > 0) {
