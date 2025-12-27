@@ -7,6 +7,15 @@ import {
   listShipments,
 } from "@/lib/db";
 
+type PackageDetail = {
+  typeOfPackage?: string;
+  units?: number;
+  weight?: number;
+  length?: number;
+  width?: number;
+  height?: number;
+};
+
 export async function GET() {
   try {
     const [partialShipments, shipments, customers, packages, items] = await Promise.all([
@@ -139,7 +148,8 @@ export async function GET() {
 
     const packageTypes = new Map();
     partialsWithDetails.forEach((ps) => {
-      ps.packages?.forEach((pkg) => {
+      const packagesForPartial = (ps.packages || []) as PackageDetail[];
+      packagesForPartial.forEach((pkg) => {
         const type = pkg.typeOfPackage || "Unknown";
         if (!packageTypes.has(type)) {
           packageTypes.set(type, { count: 0, weight: 0, volume: 0 });
