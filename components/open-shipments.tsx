@@ -220,7 +220,7 @@ export default function OpenShipmentsWithActivities() {
 
               {shipments.length > 5 && (
                 <div className="text-center text-sm text-blue-600 mt-4">
-                  <Link href="/shipments">View all {shipments.length} open shipments</Link>
+                  <Link href="/shipments">View all {shipments.length} open batches</Link>
                 </div>
               )}
             </div>

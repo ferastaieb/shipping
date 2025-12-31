@@ -49,6 +49,7 @@ export default function PartialShipmentsPage() {
   const [driverName, setDriverName] = useState("")
   const [driverVehicle, setDriverVehicle] = useState("")
   const [isClosing, setIsClosing] = useState(false)
+  const [isDeletingBatch, setIsDeletingBatch] = useState(false)
 
   // States for editing discount amount
   const [discountDialogOpen, setDiscountDialogOpen] = useState(false)
@@ -184,9 +185,12 @@ export default function PartialShipmentsPage() {
     }
   }, [searchTerm, shipment, showIncompleteOnly, activeTab])
 
-  const fetchShipmentDetails = useCallback(async () => {
+  const fetchShipmentDetails = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false
     try {
-      setIsLoading(true)
+      if (!silent) {
+        setIsLoading(true)
+      }
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/shipments/${id}?includePackagesAndItems=true`,
       )
@@ -201,7 +205,9 @@ export default function PartialShipmentsPage() {
         variant: "destructive",
       })
     } finally {
-      setIsLoading(false)
+      if (!silent) {
+        setIsLoading(false)
+      }
     }
   }, [id])
 
@@ -1034,6 +1040,37 @@ const handleDownloadHandoverInfo = () => {
     }
   }
 
+  const handleDeleteBatch = async () => {
+    if (!shipment) return
+    if (!confirm("Delete this batch? This action cannot be undone.")) return
+
+    setIsDeletingBatch(true)
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/shipments/${shipment.id}`, {
+        method: "DELETE",
+      })
+
+      if (!res.ok) {
+        let message = "Failed to delete batch."
+        try {
+          const errorData = await res.json()
+          if (errorData?.error) {
+            message = errorData.error
+          }
+        } catch {}
+        throw new Error(message)
+      }
+
+      toast({ title: "Success", description: "Batch deleted." })
+      router.push("/shipments")
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete batch."
+      toast({ title: "Error", description: errorMessage, variant: "destructive" })
+    } finally {
+      setIsDeletingBatch(false)
+    }
+  }
+
   // Handler for updating discount amount
   const handleUpdateDiscount = async () => {
     if (!selectedPartial || !shipment) return
@@ -1162,6 +1199,12 @@ const handleDownloadHandoverInfo = () => {
     }
   }
 
+  const resetTransferDialog = () => {
+    setTransferDialogOpen(false)
+    setSelectedTransferPartial(null)
+    setTransferTargetId("")
+  }
+
   const handleTransferPartial = async () => {
     if (!shipment || !selectedTransferPartial) return
     const targetId = Number.parseInt(transferTargetId, 10)
@@ -1204,11 +1247,9 @@ const handleDownloadHandoverInfo = () => {
         throw new Error(message)
       }
 
-      setTransferDialogOpen(false)
-      setSelectedTransferPartial(null)
-      setTransferTargetId("")
+      resetTransferDialog()
       toast({ title: "Success", description: "Partial shipment transferred." })
-      fetchShipmentDetails()
+      fetchShipmentDetails({ silent: true })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Error transferring partial shipment"
       toast({
@@ -1307,6 +1348,18 @@ const handleDownloadHandoverInfo = () => {
                   </Button>
                 </DialogContent>
               </Dialog>
+            )}
+            {shipment.isOpen && (
+              <Button type="button" variant="destructive" onClick={handleDeleteBatch} disabled={isDeletingBatch}>
+                {isDeletingBatch ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Batch"
+                )}
+              </Button>
             )}
           </div>
         </div>
@@ -1505,12 +1558,10 @@ const handleDownloadHandoverInfo = () => {
           open={transferDialogOpen}
           onOpenChange={(open) => {
             if (!open) {
-              setTransferDialogOpen(false)
-              setSelectedTransferPartial(null)
-              setTransferTargetId("")
-            } else {
-              setTransferDialogOpen(open)
+              resetTransferDialog()
+              return
             }
+            setTransferDialogOpen(open)
           }}
         >
           <DialogContent className="bg-white">
