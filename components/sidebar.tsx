@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Package, Users, Truck, PlusCircle } from "lucide-react"
+import { Home, Package, Users, Truck, PlusCircle, List } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useEffect, useState } from "react"
 
@@ -26,6 +26,11 @@ const routes = [
     label: "Customers",
     icon: Users,
     href: "/customers",
+  },
+  {
+    label: "Items",
+    icon: List,
+    href: "/items",
   },
 ]
 

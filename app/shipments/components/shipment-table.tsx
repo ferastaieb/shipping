@@ -1,7 +1,17 @@
 "use client"
 
 import { useState, Fragment } from "react"
-import { CheckCircle, Download, Edit, FileText, Loader2, MoreHorizontal, Send, Trash2 } from "lucide-react"
+import {
+  ArrowRightLeft,
+  CheckCircle,
+  Download,
+  Edit,
+  FileText,
+  Loader2,
+  MoreHorizontal,
+  Send,
+  Trash2,
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,9 +39,11 @@ interface ShipmentTableProps {
   onOpenDiscountDialog: (partial: PartialShipment) => void
   onOpenExtraCostDialog: (partial: PartialShipment) => void
   onCompleteInfo: (id: number) => void
+  onTransfer: (partial: PartialShipment) => void
   processingPaymentId: number | null
   generatingReceiptId: number | null
   baseUrl: string
+  allowTransfer?: boolean
 }
 
 export default function ShipmentTable({
@@ -47,8 +59,10 @@ export default function ShipmentTable({
   onOpenDiscountDialog,
   onOpenExtraCostDialog,
   onCompleteInfo,
+  onTransfer,
   processingPaymentId,
   generatingReceiptId,
+  allowTransfer = true,
 }: ShipmentTableProps) {
   const [expandedRow, setExpandedRow] = useState<number | null>(null)
 
@@ -240,6 +254,18 @@ export default function ShipmentTable({
                                 >
                                   <Edit className="mr-2 h-4 w-4" />
                                   Complete Info
+                                </DropdownMenuItem>
+                              )}
+
+                              {allowTransfer && (
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    onTransfer(partial)
+                                  }}
+                                >
+                                  <ArrowRightLeft className="mr-2 h-4 w-4" />
+                                  Transfer to Batch
                                 </DropdownMenuItem>
                               )}
 

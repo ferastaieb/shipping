@@ -9,6 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { jsPDF } from "jspdf"
@@ -17,6 +24,11 @@ import ProtectedRoute from "@/components/ProtectedRoute"
 import ShipmentTable from "../components/shipment-table"
 import type { Shipment, PartialShipment, Customer } from "../types/shipping"
 import EditPartialShipmentDialog from "../components/EditPartialShipmentDialog"
+
+type OpenShipmentOption = {
+  id: number
+  destination: string
+}
 
 
 
@@ -56,6 +68,12 @@ export default function PartialShipmentsPage() {
   const [isLoadingExtraCost, setIsLoadingExtraCost] = useState(false)
 
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [openShipments, setOpenShipments] = useState<OpenShipmentOption[]>([])
+  const [isLoadingBatches, setIsLoadingBatches] = useState(false)
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false)
+  const [transferTargetId, setTransferTargetId] = useState("")
+  const [selectedTransferPartial, setSelectedTransferPartial] = useState<PartialShipment | null>(null)
+  const [isTransferring, setIsTransferring] = useState(false)
 
   
   // Calculate total cost for the batch (including discounts and extra costs)
@@ -90,6 +108,25 @@ export default function PartialShipmentsPage() {
       setCustomers(await res.json())
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" })
+    }
+  }, [])
+
+  const fetchOpenShipments = useCallback(async () => {
+    try {
+      setIsLoadingBatches(true)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/shipments?status=open`, {
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      })
+      if (!response.ok) throw new Error("Failed to fetch open batches")
+      setOpenShipments(await response.json())
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" })
+    } finally {
+      setIsLoadingBatches(false)
     }
   }, [])
 
@@ -171,7 +208,8 @@ export default function PartialShipmentsPage() {
   useEffect(() => {
     fetchShipmentDetails()
     fetchCustomers()
-  }, [fetchShipmentDetails, fetchCustomers])
+    fetchOpenShipments()
+  }, [fetchShipmentDetails, fetchCustomers, fetchOpenShipments])
 
   const handleMarkPaymentDone = async (partialId: number) => {
     if (!shipment) return
@@ -1115,6 +1153,78 @@ const handleDownloadHandoverInfo = () => {
     }, 50)
   }
 
+  const openTransferDialog = (partial: PartialShipment) => {
+    setSelectedTransferPartial(partial)
+    setTransferTargetId("")
+    setTransferDialogOpen(true)
+    if (!openShipments.length) {
+      fetchOpenShipments()
+    }
+  }
+
+  const handleTransferPartial = async () => {
+    if (!shipment || !selectedTransferPartial) return
+    const targetId = Number.parseInt(transferTargetId, 10)
+    if (!Number.isFinite(targetId)) {
+      toast({
+        title: "Error",
+        description: "Please select a valid target batch.",
+        variant: "destructive",
+      })
+      return
+    }
+    if (targetId === shipment.id) {
+      toast({
+        title: "Error",
+        description: "Select a different batch to transfer to.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsTransferring(true)
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/shipments/${shipment.id}/partial-shipments/${selectedTransferPartial.id}/transfer`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ targetShipmentId: targetId }),
+        },
+      )
+
+      if (!response.ok) {
+        let message = "Failed to transfer partial shipment."
+        try {
+          const errorData = await response.json()
+          if (errorData?.error) {
+            message = errorData.error
+          }
+        } catch {}
+        throw new Error(message)
+      }
+
+      setTransferDialogOpen(false)
+      setSelectedTransferPartial(null)
+      setTransferTargetId("")
+      toast({ title: "Success", description: "Partial shipment transferred." })
+      fetchShipmentDetails()
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Error transferring partial shipment"
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      setIsTransferring(false)
+    }
+  }
+
+  const availableTargets = shipment
+    ? openShipments.filter((batch) => batch.id !== shipment.id)
+    : []
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -1304,10 +1414,12 @@ const handleDownloadHandoverInfo = () => {
                 onDownloadZebraFile={handleDownloadZebraFile}
                 onOpenDiscountDialog={openDiscountDialog}
                 onOpenExtraCostDialog={openAddExtraCostDialog}
+                onTransfer={openTransferDialog}
                 onCompleteInfo={(id) => (window.location.href = `/partial-shipment/${id}`)}
                 processingPaymentId={processingPaymentId}
                 generatingReceiptId={generatingReceiptId}
                 baseUrl={baseUrl}
+                allowTransfer={shipment.isOpen}
               />
             </TabsContent>
 
@@ -1327,10 +1439,12 @@ const handleDownloadHandoverInfo = () => {
                 onDownloadZebraFile={handleDownloadZebraFile}
                 onOpenDiscountDialog={openDiscountDialog}
                 onOpenExtraCostDialog={openAddExtraCostDialog}
+                onTransfer={openTransferDialog}
                 onCompleteInfo={(id) => (window.location.href = `/partial-shipment/${id}`)}
                 processingPaymentId={processingPaymentId}
                 generatingReceiptId={generatingReceiptId}
                 baseUrl={baseUrl}
+                allowTransfer={shipment.isOpen}
               />
             </TabsContent>
 
@@ -1350,10 +1464,12 @@ const handleDownloadHandoverInfo = () => {
                 onDownloadZebraFile={handleDownloadZebraFile}
                 onOpenDiscountDialog={openDiscountDialog}
                 onOpenExtraCostDialog={openAddExtraCostDialog}
+                onTransfer={openTransferDialog}
                 onCompleteInfo={(id) => (window.location.href = `/partial-shipment/${id}`)}
                 processingPaymentId={processingPaymentId}
                 generatingReceiptId={generatingReceiptId}
                 baseUrl={baseUrl}
+                allowTransfer={shipment.isOpen}
               />
             </TabsContent>
 
@@ -1373,14 +1489,102 @@ const handleDownloadHandoverInfo = () => {
                 onDownloadZebraFile={handleDownloadZebraFile}
                 onOpenDiscountDialog={openDiscountDialog}
                 onOpenExtraCostDialog={openAddExtraCostDialog}
+                onTransfer={openTransferDialog}
                 onCompleteInfo={(id) => (window.location.href = `/partial-shipment/${id}`)}
                 processingPaymentId={processingPaymentId}
                 generatingReceiptId={generatingReceiptId}
                 baseUrl={baseUrl}
+                allowTransfer={shipment.isOpen}
               />
             </TabsContent>
           </Tabs>
         </div>
+
+        {/* Transfer Dialog */}
+        <Dialog
+          open={transferDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setTransferDialogOpen(false)
+              setSelectedTransferPartial(null)
+              setTransferTargetId("")
+            } else {
+              setTransferDialogOpen(open)
+            }
+          }}
+        >
+          <DialogContent className="bg-white">
+            <DialogHeader>
+              <DialogTitle className="text-[#2C3E50]">Transfer to Another Batch</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              {selectedTransferPartial && (
+                <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-600">
+                  <div className="font-medium text-gray-800">
+                    Partial Shipment #{selectedTransferPartial.id}
+                  </div>
+                  <div>{selectedTransferPartial.customer?.name || "Unknown customer"}</div>
+                </div>
+              )}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="transferTarget" className="text-right text-[#2C3E50]">
+                  Target Batch
+                </Label>
+                <Select value={transferTargetId} onValueChange={setTransferTargetId}>
+                  <SelectTrigger id="transferTarget" className="col-span-3">
+                    <SelectValue
+                      placeholder={isLoadingBatches ? "Loading batches..." : "Select a batch"}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableTargets.length ? (
+                      availableTargets.map((batch) => (
+                        <SelectItem key={batch.id} value={batch.id.toString()}>
+                          Batch #{batch.id} to {batch.destination}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="none" disabled>
+                        No open batches available
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setTransferDialogOpen(false)
+                  setSelectedTransferPartial(null)
+                  setTransferTargetId("")
+                }}
+                className="bg-gray-200 text-[#2C3E50] hover:bg-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleTransferPartial}
+                disabled={
+                  isTransferring || !transferTargetId || !selectedTransferPartial || !shipment.isOpen
+                }
+                className="bg-[#3498DB] text-white hover:bg-[#2980B9]"
+              >
+                {isTransferring ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Transferring...
+                  </>
+                ) : (
+                  "Transfer"
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Discount Edit Dialog - Improved version */}
         <Dialog
