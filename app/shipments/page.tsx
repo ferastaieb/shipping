@@ -36,7 +36,9 @@ export default function OpenShipmentsPage() {
 
   const fetchOpenShipments = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/shipments?status=open`)
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/shipments?status=open`, {
+        cache: "no-store",
+      })
       if (!res.ok) {
         throw new Error("Failed to fetch open batches")
       }

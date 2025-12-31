@@ -116,6 +116,7 @@ export default function PartialShipmentsPage() {
     try {
       setIsLoadingBatches(true)
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/shipments?status=open`, {
+        cache: "no-store",
         headers: {
           "Cache-Control": "no-cache, no-store, must-revalidate",
           Pragma: "no-cache",

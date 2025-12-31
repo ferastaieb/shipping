@@ -54,6 +54,7 @@ export default function OpenShipmentsWithActivities() {
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/shipments?status=open`, {
           signal: controller.signal,
+          cache: "no-store",
           headers: {
             "Cache-Control": "no-cache, no-store, must-revalidate",
             Pragma: "no-cache",

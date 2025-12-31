@@ -5,8 +5,10 @@ import { createNote, listShipments } from '@/lib/db'
 import { nextId, putItem, tableName } from '@/lib/dynamodb'
 import { getUserIdFromCookies } from '@/lib/auth'
 
+export const dynamic = "force-dynamic";
+
 // GET all shipments, optionally filter by status=open|closed and destination
-// Add cache headers to prevent frequent requests
+// Always return fresh data to reflect batch changes immediately
 export async function GET(request) {
   // Parse the URL to get query parameters
   const { searchParams } = new URL(request.url)
@@ -34,12 +36,12 @@ export async function GET(request) {
         isOpen: s.isOpen,
       }))
 
-    // Set cache headers to prevent frequent requests
     return new NextResponse(JSON.stringify(responseData), {
       headers: {
         "Content-Type": "application/json",
-        // Cache for 5 minutes
-        "Cache-Control": "max-age=300, s-maxage=300",
+        "Cache-Control": "no-store, max-age=0",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     })
   } catch (error) {

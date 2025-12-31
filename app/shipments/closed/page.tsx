@@ -40,7 +40,8 @@ export default function ClosedShipmentsPage() {
     try {
       // Fetch closed shipments from your API endpoint.
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/shipments?status=closed`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/shipments?status=closed`,
+        { cache: "no-store" }
       );
       if (!res.ok) {
         throw new Error("Failed to fetch closed shipments");
