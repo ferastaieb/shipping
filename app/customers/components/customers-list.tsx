@@ -4,18 +4,21 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Users } from "lucide-react";
+import { Eye, Loader2, Trash2, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
 
 export default function CustomersList() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [originFilter, setOriginFilter] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   // Fetch all customers on mount
   useEffect(() => {
+    setIsLoading(true);
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/customers`, { cache: "no-store" })
       .then((res) => {
         if (!res.ok) {
@@ -30,6 +33,11 @@ export default function CustomersList() {
       .catch((error) => {
         console.error("Error fetching customers:", error);
         setIsLoading(false);
+        toast({
+          title: "Error",
+          description: "Failed to load customers.",
+          variant: "destructive",
+        });
       });
   }, []);
 
@@ -37,15 +45,49 @@ export default function CustomersList() {
   const filteredCustomers = customers.filter((customer) => {
     const lowerSearch = search.toLowerCase();
     const nameMatch = customer.name.toLowerCase().includes(lowerSearch);
-    const phoneMatch = customer.phone.toLowerCase().includes(lowerSearch);
+    const phoneMatch = customer.phone?.toLowerCase().includes(lowerSearch) ?? false;
     const searchMatch = nameMatch || phoneMatch;
 
     const originMatch = originFilter
-      ? customer.origin.toLowerCase().includes(originFilter.toLowerCase())
+      ? customer.origin?.toLowerCase().includes(originFilter.toLowerCase())
       : true;
 
     return searchMatch && originMatch;
   });
+
+  const handleDeleteCustomer = async (customerId: number) => {
+    if (!confirm("Delete this customer? This action cannot be undone.")) return;
+
+    setDeletingId(customerId);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/${customerId}`,
+        { method: "DELETE" }
+      );
+
+      if (!res.ok) {
+        let message = "Failed to delete customer.";
+        try {
+          const errorData = await res.json();
+          if (errorData?.error) {
+            message = errorData.error;
+          }
+        } catch {}
+        throw new Error(message);
+      }
+
+      setCustomers((prev) => prev.filter((customer) => customer.id !== customerId));
+      toast({ title: "Success", description: "Customer deleted." });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete customer.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -119,12 +161,30 @@ export default function CustomersList() {
                       )}
                     </TableCell>
                     <TableCell className="text-right border-t border-[#DCDCDC]">
-                      <Link href={`/customers/${customer.id}`}>
-                        <Button variant="outline" size="sm" className="bg-[#3498DB] text-white hover:bg-[#2980B9]">
-                          <Eye className="w-4 h-4 mr-2" />
-                          View
+                      <div className="flex justify-end gap-2">
+                        <Link href={`/customers/${customer.id}`}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-[#3498DB] text-white hover:bg-[#2980B9]"
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteCustomer(customer.id)}
+                          disabled={deletingId === customer.id}
+                        >
+                          {deletingId === customer.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
                         </Button>
-                      </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
