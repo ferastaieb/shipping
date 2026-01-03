@@ -13,13 +13,13 @@ import { toast } from "@/hooks/use-toast"
 import { Loader2, Package, Truck, FileText, CreditCard } from "lucide-react"
 import * as XLSX from "xlsx"
 import ProtectedRoute from "@/components/ProtectedRoute"
-import ReactSelect from "react-select"
+import ReactSelect, { type FilterOptionOption } from "react-select"
 
 // Updated Customer interface
 interface Customer {
   id: number
   name: string
-  phone: string
+  phone: string | null
   address: string
 }
 
@@ -153,10 +153,32 @@ export default function AddPartialShipmentPage() {
     }
   }
 
+  type CustomerOption = {
+    value: string
+    label: string
+    phone?: string | null
+  }
+
+  const normalizeSearch = (value: string | null | undefined) =>
+    (value || "").toLowerCase().replace(/\s+/g, "")
+
+  const filterCustomerOption = (
+    option: FilterOptionOption<CustomerOption>,
+    inputValue: string,
+  ) => {
+    const term = normalizeSearch(inputValue)
+    if (!term) return true
+    return (
+      normalizeSearch(option.data.label).includes(term) ||
+      normalizeSearch(option.data.phone).includes(term)
+    )
+  }
+
   // Convert customers to options for react-select
-  const customerOptions = customers.map((customer) => ({
+  const customerOptions: CustomerOption[] = customers.map((customer) => ({
     value: customer.id.toString(),
     label: customer.name,
+    phone: customer.phone,
   }))
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -475,6 +497,7 @@ export default function AddPartialShipmentPage() {
                       handleSelectChange("customerId", selectedOption ? selectedOption.value : "")
                     }
                     options={customerOptions}
+                    filterOption={filterCustomerOption}
                     placeholder="Select or search a customer"
                     isClearable
                     isSearchable
