@@ -818,10 +818,19 @@ const handleDownloadHandoverInfo = () => {
       const pageHeight = doc.internal.pageSize.getHeight()
       const pageWidth = doc.internal.pageSize.getWidth()
       const boxX = 14
-      const boxY = pageHeight - 70
-      const boxWidth = pageWidth - 28
       const lineHeight = 6
       const boxHeight = lineHeight * 8 + 10
+      const boxWidth = pageWidth - 28
+      const boxBottomMargin = 12
+      const minTableGap = 8
+      let boxY = pageHeight - boxHeight - boxBottomMargin
+
+      const lastTable = (doc as any).lastAutoTable
+      const lastTableY = lastTable?.finalY ?? 0
+      if (lastTableY + minTableGap > boxY) {
+        doc.addPage()
+        boxY = pageHeight - boxHeight - boxBottomMargin
+      }
 
       // Draw a light gray box as the background
       doc.setFillColor(245, 245, 245)
